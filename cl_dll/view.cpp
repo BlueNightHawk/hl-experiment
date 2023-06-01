@@ -835,6 +835,10 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		}
 	}
 
+	gHUD.m_TauntModel.origin = view->origin;
+	gHUD.m_TauntModel.angles = view->angles;
+	gHUD.m_TauntModel.curstate.angles = view->curstate.angles;
+
 	lasttime = pparams->time;
 
 	v_origin = pparams->vieworg;

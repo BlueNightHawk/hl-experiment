@@ -606,6 +606,9 @@ public:
 	void AddHudElem(CHudBase* p);
 
 	float GetSensitivity();
+
+	cl_entity_t m_TauntModel;
+	float m_flTauntTime = 0.0f;
 };
 
 extern CHud gHUD;

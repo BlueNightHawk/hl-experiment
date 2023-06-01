@@ -388,6 +388,16 @@ void DLLEXPORT HUD_TempEntUpdate(
 	if (g_pParticleMan)
 		g_pParticleMan->SetVariables(cl_gravity, vAngles);
 
+	if (gHUD.m_flTauntTime > gEngfuncs.GetClientTime())
+	{
+		gEngfuncs.Con_Printf("gHUD.m_flTauntTime : %f \n", gHUD.m_flTauntTime);
+		Callback_AddVisibleEntity(&gHUD.m_TauntModel);
+	}
+	else if (gHUD.m_flTauntTime < gEngfuncs.GetClientTime() && gHUD.m_flTauntTime != 0)
+	{
+		gHUD.m_flTauntTime = 0;
+	}
+
 	// Nothing to simulate
 	if (!*ppTempEntActive)
 		return;
@@ -408,7 +418,7 @@ void DLLEXPORT HUD_TempEntUpdate(
 	gTempEntFrame = (gTempEntFrame + 1) & 31;
 
 	pTemp = *ppTempEntActive;
-
+		 
 	// !!! Don't simulate while paused....  This is sort of a hack, revisit.
 	if (frametime <= 0)
 	{

@@ -30,6 +30,12 @@
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
 
+#include "studio.h"
+#include "com_model.h"
+#include "r_studioint.h"
+
+extern engine_studio_api_s IEngineStudio;
+
 hud_player_info_t g_PlayerInfoList[MAX_PLAYERS_HUD + 1];	// player info from the engine
 extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1]; // additional player info sent directly to the client dll
 
@@ -279,6 +285,44 @@ int __MsgFunc_AllowSpec(const char* pszName, int iSize, void* pbuf)
 	return 0;
 }
 
+
+// Taunt Test
+void DLLEXPORT IN_TauntDown()
+{
+	if (gHUD.m_flTauntTime == 0)
+	{
+		model_s* pModel = IEngineStudio.Mod_ForName("models/v_taunt.mdl", 0);
+		if (!pModel)
+			return;
+
+		studiohdr_t* pHdr = static_cast<studiohdr_t*>(IEngineStudio.Mod_Extradata(pModel));
+
+		if (!pHdr)
+			return;
+	
+		cl_entity_s* pTaunt = &gHUD.m_TauntModel; 
+
+		auto pseqdesc = (mstudioseqdesc_t*)((byte*)pHdr + pHdr->seqindex) + 1 /*taunt sequence*/;
+
+		memcpy(pTaunt, gEngfuncs.GetLocalPlayer(), sizeof(cl_entity_s));
+
+		pTaunt->player = 0;
+		pTaunt->index = 0;
+		pTaunt->model = pModel;
+		pTaunt->curstate.frame = 0;
+		pTaunt->curstate.animtime = gEngfuncs.GetClientTime();
+		pTaunt->curstate.sequence = 1;
+		pTaunt->curstate.effects |= EF_VIEWMODEL &~ EF_NODRAW;
+		pTaunt->curstate.skin = 1;
+
+		gHUD.m_flTauntTime = gEngfuncs.GetClientTime() + (pseqdesc->numframes / pseqdesc->fps);
+	}
+}
+
+void DLLEXPORT IN_TauntUp()
+{
+}
+
 // This is called every time the DLL is loaded
 void CHud::Init()
 {
@@ -321,6 +365,7 @@ void CHud::Init()
 	CVAR_CREATE("hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO); // controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE("hud_takesshots", "0", FCVAR_ARCHIVE);					   // controls whether or not to automatically take screenshots at the end of a round
 
+	gHUD.m_TauntModel = {};
 
 	m_iLogo = 0;
 	m_iFOV = 0;
@@ -334,6 +379,9 @@ void CHud::Init()
 	cl_rollangle = CVAR_CREATE("cl_rollangle", "2.0", FCVAR_ARCHIVE);
 	cl_rollspeed = CVAR_CREATE("cl_rollspeed", "200", FCVAR_ARCHIVE);
 	cl_bobtilt = CVAR_CREATE("cl_bobtilt", "0", FCVAR_ARCHIVE);
+
+	gEngfuncs.pfnAddCommand("+taunt", IN_TauntDown);
+	gEngfuncs.pfnAddCommand("-taunt", IN_TauntUp);
 
 	m_pSpriteList = NULL;
 

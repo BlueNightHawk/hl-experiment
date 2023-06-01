@@ -21,6 +21,9 @@
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 
+#include "PlatformHeaders.h"
+#include <gl/GL.h>
+
 extern cvar_t* tfc_newmodels;
 
 extern extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1];
@@ -35,6 +38,7 @@ int m_nPlayerGaitSequences[MAX_PLAYERS];
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
+
 
 /////////////////////
 // Implementation of CStudioModelRenderer.h
@@ -1699,7 +1703,19 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware()
 			}
 
 			IEngineStudio.GL_SetRenderMode(rendermode);
+
+			if ((m_pCurrentEntity->curstate.effects & EF_VIEWMODEL) != 0)
+			{
+				// tune this if needed
+				// the real viewmodel will always be always visible
+				// and draw over the fake one
+				glDepthRange(0.0f, 0.9f);
+			}
 			IEngineStudio.StudioDrawPoints();
+			if ((m_pCurrentEntity->curstate.effects & EF_VIEWMODEL) != 0)
+			{
+				glDepthRange(0.0f, 1.0f);
+			}
 			IEngineStudio.GL_StudioDrawShadow();
 		}
 	}
